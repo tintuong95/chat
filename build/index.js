@@ -1,0 +1,1 @@
+(()=>{var e={142:e=>{"use strict";e.exports=require("dotenv")},860:e=>{"use strict";e.exports=require("express")}},r={};function s(o){var t=r[o];if(void 0!==t)return t.exports;var n=r[o]={exports:{}};return e[o](n,n.exports,s),n.exports}(()=>{const e=s(860);s(142).config(),e().listen(process.env.PORT,(()=>{console.log("Listen on port "+process.env.PORT)}))})()})();
