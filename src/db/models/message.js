@@ -1,26 +1,26 @@
-"use strict";
-const {v4} = require('uuid');
-const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
-  class Message extends Model {
-    static associate(models) {}
-  }
-  Message.init(
-    {
-      id: {
-        type: DataTypes.STRING,
-        primaryKey: true,
-        defaultValue: () => v4()
-      },
-      roomID: DataTypes.STRING,
+const { DataTypes } = require("sequelize");
+const shortid = require("shortid");
+const sequelize = require("../../config/sequelize.js");
 
-      message: DataTypes.TEXT,
-      status: DataTypes.BOOLEAN,
+
+const Message = sequelize.define(
+  "Messages",
+  {
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      defaultValue: () => shortid.generate(),
     },
-    {
-      sequelize,
-      modelName: "Messages",
-    }
-  );
-  return Message;
-};
+    content: DataTypes.TEXT,
+    roomId: DataTypes.TEXT,
+    status: DataTypes.BOOLEAN,
+    state: DataTypes.BOOLEAN,
+  },
+  {
+    sequelize,
+    modelName: "Messages",
+  }
+);
+
+module.exports = Message;
+

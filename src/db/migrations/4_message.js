@@ -4,18 +4,22 @@ module.exports = {
     await queryInterface.createTable("Messages", {
       id: {
         allowNull: false,
- 
+
         primaryKey: true,
         type: Sequelize.STRING,
       },
-      roomID: {
-        type: Sequelize.STRING,
-      },
-      message: {
+      content: {
         type: Sequelize.TEXT,
       },
       status: {
         type: Sequelize.BOOLEAN,
+      },
+      state: {
+        type: Sequelize.BOOLEAN,
+      },
+  
+      roomId: {
+        type: Sequelize.STRING,
       },
       createdAt: {
         allowNull: false,

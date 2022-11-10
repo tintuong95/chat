@@ -1,15 +1,13 @@
 const express = require("express");
 const http = require("http");
-const { faker } = require("@faker-js/faker");
-const script =require("./script.json")
+const { DatabaseError } = require("sequelize");
+const sequelize = require("./config/sequelize.js");
+const Message = require("./db/models/message.js");
+const Rooms = require("./db/models/room.js");
+const question = require("./question.json");
 
-
-const db = require("./db/models");
 const app = express();
 const server = http.createServer(app);
-
-
-
 
 const io = require("socket.io")(server, {
   cors: {
@@ -20,92 +18,107 @@ const io = require("socket.io")(server, {
   },
 });
 
+sequelize.sync({alter:true})
+
 io.on("connection", (socket) => {
-  socket.on("listRoom", async ({ limit, offset }) => {
-    try {
-      const response = await db.Rooms.findAll({
-        limit,
-        offset,
-      });
-      io.emit("sendRoom", { data: response });
-    } catch (err) {
-      console.log(err);
-    }
+
+  socket.on("join_room_client",async () => {
+    await createRoom(socket.id);
+    await socket.join(socket.id);
+    io.to(socket.id).emit("roomId",{id:socket.id})
   });
 
-  socket.on("listMessageUser", async (data) => {
-    try {
-      const response = await db.Messages.findAll({
-        where: { roomID: data?.roomID },
-        order: [["createdAt", "ASC"]],
-      });
-
-      io.emit("sendMessage", { data: response });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-
-  socket.on("listMessageAdmin", async (data) => {
-    try {
-      const response = await db.Messages.findAll({
-        where: { roomID: data?.roomID },
-        order: [["createdAt", "ASC"]],
-      });
-      const room = await db.Rooms.findOne({ where: { id: data?.roomID } });
-      room.update({ count: 0 });
-
-      io.emit("sendMessage", { data: response });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-
-  socket.on("sendMessage", async (data) => {
-    try {
-      if (data.status) {
-        const room = await db.Rooms.findOne({ where: { id: data.roomID } });
-        await room.update({ count: ++room.toJSON().count });
-      }
-      await db.Messages.create(data);
-      const message = await db.Messages.findAll({
-        where: { roomID: data?.roomID },
-        order: [["createdAt", "ASC"]],
-      });
-      io.emit("sendMessage", { data: message });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-
-  //remove
-  socket.on("clearMessage", async ({ roomID }) => {
-    try {
-      await db.Messages.destroy({ where: { roomID } });
-      const message = await db.Messages.findAll({
-        where: { roomID },
-        order: [["createdAt", "ASC"]],
-      });
-      io.emit("sendMessage", { data: message });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-
-  //client
-  socket.on("createRoom", async ({ roomID }) => {
-    try {
-      db.Rooms.create({ id: roomID });
-    } catch (err) {
-      console.log(err);
-    }
-  });
-  socket.on("chatbot", ({ message }) => {
-    console.log(message);
-    io.emit("sendChatbot", {
-      data: `<button onClick={()=>{console.log("d")}}>clicke</button>`,
+  socket.on("list_message_client", async ({ roomId }) => {
+    const response = await Message.findAll({
+      where: { roomId },
     });
+    io.to(roomId).emit("receive_message_client", { data: response });
+  });
+
+  socket.on("send_message_client", async ({roomId,data}) => {
+    try{
+      if (!data.state) {
+       const response =await Rooms.findOne({where:{roomId}})
+       response.update({count:response.getDataValue("count")+1})
+      const filterList = Object.entries(question).filter((item) => {
+        return item[0].includes(data.content);
+      });
+      if (filterList.length > 0) {
+        await showQuestion(filterList, data);
+      } else {
+        await Message.bulkCreate([data]);
+      }
+    } else {
+     
+      await Message.create({ ...data, content: question[data.content] });
+    }
+
+    //response
+    const response = await Message.findAll({
+      where: { roomId: data.roomId },
+      order: [["createdAt", "ASC"]],
+    });
+    io.to(roomId).emit("receive_message", { data: response });
+    }catch(e){
+    
+      console.log(e)
+    }
+    
+  });
+
+  socket.on("changeStatusRoom", async ({ roomId }) => {
+    const response = await Rooms.findOne({ where: { roomId } });
+    if (response) {
+      response.update({ status: false });
+    }
+  });
+
+  //admin
+  socket.on("join_room", async ({ roomId }) => {
+     const response =await Rooms.findOne({where:{roomId}})
+       response.update({count:0})
+    socket.join(roomId);
+  });
+
+  socket.on("list_message", async ({ roomId }) => {
+    const response = await Message.findAll({
+      where: { roomId },
+      order: [["createdAt", "ASC"]],
+    });
+    io.to(roomId).emit("receive_message", { data: response });
+  });
+
+  socket.on("send_message_admin", async ({ roomId, data }) => {
+    await Message.create(data);
+    const response = await Message.findAll({
+      where: { roomId },
+      order: [["createdAt", "ASC"]],
+    });
+    io.to(roomId).emit("receive_message", { data: response });
+  });
+
+  socket.on("roomList", async (data) => {
+    const response = await Rooms.findAll();
+    io.emit("roomList", { data: response });
   });
 });
 
 server.listen(3004);
+
+///handler search question
+async function showQuestion(filterList, data) {
+  const newList = await filterList.map((item) => ({
+    roomId: data.roomId,
+    content: item[0],
+    status: true,
+    state: true,
+  }));
+  await Message.bulkCreate([data, ...newList]);
+}
+///handler create room
+async function createRoom(id) {
+  const room = await Rooms.findOne({ where: { roomId: id } });
+  if (!room) {
+    Rooms.create({ roomId: id, status: true });
+  }
+}

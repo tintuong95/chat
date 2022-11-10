@@ -8,13 +8,17 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.STRING,
       },
-      name: {
+      roomId: {
         type: Sequelize.STRING,
       },
-      count: {
-        type: Sequelize.INTEGER,
- 
+       status: {
+        type: Sequelize.BOOLEAN,
       },
+      count:{
+       type: Sequelize.INTEGER,
+      },
+      
+      
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
