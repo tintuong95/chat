@@ -5,7 +5,7 @@ const sequelize = require("./config/sequelize.js");
 const Message = require("./db/models/message.js");
 const Rooms = require("./db/models/room.js");
 const question = require("./question.json");
-
+require("dotenv").config()
 const app = express();
 const server = http.createServer(app);
 
@@ -13,7 +13,6 @@ const io = require("socket.io")(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    // allowedHeaders: ["my-custom-header"],
     credentials: true,
   },
 });
@@ -22,8 +21,8 @@ sequelize.sync({ alter: true })
 
 io.on("connection", (socket) => {
 
-  socket.on("join_room_client", async () => {
-    await createRoom(socket.id);
+  socket.on("join_room_client", async ({role,infoChat}) => {
+    await createRoom(socket.id, infoChat);
     await socket.join(socket.id);
     io.to(socket.id).emit("roomId", { id: socket.id })
   });
@@ -43,7 +42,7 @@ io.on("connection", (socket) => {
         const filterList = Object.entries(question).filter((item) => {
           return item[0].includes(data.content);
         });
-       
+
         if (filterList.length > 0) {
           await showQuestion(filterList, data);
         } else {
@@ -100,9 +99,11 @@ io.on("connection", (socket) => {
 
   socket.on("roomList", async (data) => {
     const response = await Rooms.findAll({
-      where: { count :{
-        [Op.gt]: 0, 
-      }}
+      where: {
+        count: {
+          [Op.gt]: 0,
+        }
+      }
     });
     io.emit("roomList", { data: response });
   });
@@ -121,9 +122,9 @@ async function showQuestion(filterList, data) {
   await Message.bulkCreate([data, ...newList]);
 }
 ///handler create room
-async function createRoom(id) {
+async function createRoom(id,infoChat) {
   const room = await Rooms.findOne({ where: { roomId: id } });
   if (!room) {
-    Rooms.create({ roomId: id, status: true });
+    Rooms.create({ roomId: id, status: true, name: infoChat?.name,phone:infoChat?.phone });
   }
 }

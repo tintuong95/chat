@@ -13,17 +13,23 @@ const Rooms = sequelize.define(
     roomId: {
       type: DataTypes.STRING,
     },
-    status:{
-      type:DataTypes.BOOLEAN,
-       defaultValue: false
+    status: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
     },
-     count:{
-       type: DataTypes.INTEGER,
-        defaultValue: 0
-      },
+    count: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    phone: {
+      type: DataTypes.STRING,
+    },
+    name: {
+      type: DataTypes.STRING,
+    }
   },
   {
-    
+
     sequelize,
     modelName: "Rooms",
   }

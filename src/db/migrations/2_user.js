@@ -11,14 +11,21 @@ module.exports = {
       roomId: {
         type: Sequelize.STRING,
       },
-       status: {
+      status: {
         type: Sequelize.BOOLEAN,
       },
-      count:{
-       type: Sequelize.INTEGER,
+      count: {
+        type: Sequelize.INTEGER,
       },
-      
-      
+
+      name: {
+        type: Sequelize.STRING,
+      },
+
+      phone: {
+        type: Sequelize.STRING,
+      },
+
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
