@@ -11,13 +11,14 @@ const server = http.createServer(app);
 
 const io = require("socket.io")(server, {
   cors: {
-    origin: "http://localhost:3003/",
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
-sequelize.sync({ alter: true })
+
+sequelize.sync({ alter: false })
 
 io.on("connection", (socket) => {
 
