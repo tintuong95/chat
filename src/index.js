@@ -19,6 +19,9 @@ const io = require("socket.io")(server, {
 
 
 sequelize.sync({ alter: false })
+app.listen(process.env.PORT || 3004, () => {
+  console.log("server is running on port ", process.env.PORT);
+})
 
 io.on("connection", (socket) => {
 
@@ -130,6 +133,3 @@ async function createRoom(id,infoChat) {
   }
 }
 
-app.listen(process.env.PORT || 3004,()=>{
-  console.log("server is running on port ",process.env.PORT);
-})
