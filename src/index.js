@@ -129,3 +129,7 @@ async function createRoom(id,infoChat) {
     Rooms.create({ roomId: id, status: true, name: infoChat?.name,phone:infoChat?.phone });
   }
 }
+
+app.listen(()=>{
+  console.log("server is running on port ",process.env.PORT);
+})
