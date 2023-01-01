@@ -110,7 +110,7 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(3004);
+
 
 ///handler search question
 async function showQuestion(filterList, data) {
@@ -130,6 +130,6 @@ async function createRoom(id,infoChat) {
   }
 }
 
-app.listen(()=>{
+app.listen(process.env.PORT || 3004,()=>{
   console.log("server is running on port ",process.env.PORT);
 })
