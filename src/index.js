@@ -16,7 +16,7 @@ const io = require("socket.io")(server, {
   cors: {
     origin: [
       "https://taynguyenfood.vercel.app",
-      "http://anotherdomain.com:*",
+      "https://admin-taynguyenfood.vercel.app",
     ],
     methods: ["GET", "POST"],
   },
