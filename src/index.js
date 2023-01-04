@@ -5,26 +5,25 @@ const sequelize = require("./config/sequelize.js");
 const Message = require("./db/models/message.js");
 const Rooms = require("./db/models/room.js");
 const question = require("./question.json");
+const cors =require("cors")
 require("dotenv").config()
 const app = express();
+
+app.use(cors())
 const server = http.createServer(app);
 
 const io = require("socket.io")(server, {
   cors: {
     origin: "http://localhost:3003",
     methods: ["GET", "POST"],
-    credentials: true,
   },
 });
 
 
 sequelize.sync({ alter: false })
-app.listen(process.env.PORT || 3004, () => {
-  console.log("server is running on port ", process.env.PORT);
-})
 
 io.on("connection", (socket) => {
-
+  console.log("connection roi ne")
   socket.on("join_room_client", async ({role,infoChat}) => {
     await createRoom(socket.id, infoChat);
     await socket.join(socket.id);
@@ -133,3 +132,6 @@ async function createRoom(id,infoChat) {
   }
 }
 
+io.listen(process.env.PORT || 3004, () => {
+  console.log("server is running on port ", process.env.PORT);
+});
