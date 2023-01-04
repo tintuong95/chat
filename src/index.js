@@ -14,7 +14,10 @@ const server = http.createServer(app);
 
 const io = require("socket.io")(server, {
   cors: {
-    origin: "http://localhost:3003",
+    origin: [
+      "https://taynguyenfood.vercel.app",
+      "http://anotherdomain.com:*",
+    ],
     methods: ["GET", "POST"],
   },
 });
